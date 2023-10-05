@@ -8,10 +8,10 @@
 import SwiftUI
 
 @main
-struct HAPTIC_XCEL_Watch_AppApp: App {
+struct HAPTIC_XCEL_Watch_App: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            HomeView()
         }
     }
 }

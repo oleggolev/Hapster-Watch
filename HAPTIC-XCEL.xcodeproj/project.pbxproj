@@ -12,9 +12,6 @@
 		F765E2D62ACE17FA000DEF19 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F765E2D52ACE17FA000DEF19 /* ContentView.swift */; };
 		F765E2D82ACE17FB000DEF19 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F765E2D72ACE17FB000DEF19 /* Assets.xcassets */; };
 		F765E2DB2ACE17FB000DEF19 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F765E2DA2ACE17FB000DEF19 /* Preview Assets.xcassets */; };
-		F765E2E52ACE17FB000DEF19 /* HAPTIC_XCEL_Watch_AppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F765E2E42ACE17FB000DEF19 /* HAPTIC_XCEL_Watch_AppTests.swift */; };
-		F765E2EF2ACE17FB000DEF19 /* HAPTIC_XCEL_Watch_AppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F765E2EE2ACE17FB000DEF19 /* HAPTIC_XCEL_Watch_AppUITests.swift */; };
-		F765E2F12ACE17FB000DEF19 /* HAPTIC_XCEL_Watch_AppUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F765E2F02ACE17FB000DEF19 /* HAPTIC_XCEL_Watch_AppUITestsLaunchTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -63,10 +60,7 @@
 		F765E2D72ACE17FB000DEF19 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F765E2DA2ACE17FB000DEF19 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		F765E2E02ACE17FB000DEF19 /* HAPTIC-XCEL Watch AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "HAPTIC-XCEL Watch AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		F765E2E42ACE17FB000DEF19 /* HAPTIC_XCEL_Watch_AppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HAPTIC_XCEL_Watch_AppTests.swift; sourceTree = "<group>"; };
 		F765E2EA2ACE17FB000DEF19 /* HAPTIC-XCEL Watch AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "HAPTIC-XCEL Watch AppUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		F765E2EE2ACE17FB000DEF19 /* HAPTIC_XCEL_Watch_AppUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HAPTIC_XCEL_Watch_AppUITests.swift; sourceTree = "<group>"; };
-		F765E2F02ACE17FB000DEF19 /* HAPTIC_XCEL_Watch_AppUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HAPTIC_XCEL_Watch_AppUITestsLaunchTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,8 +92,6 @@
 			isa = PBXGroup;
 			children = (
 				F765E2D22ACE17FA000DEF19 /* HAPTIC-XCEL Watch App */,
-				F765E2E32ACE17FB000DEF19 /* HAPTIC-XCEL Watch AppTests */,
-				F765E2ED2ACE17FB000DEF19 /* HAPTIC-XCEL Watch AppUITests */,
 				F765E2C92ACE17FA000DEF19 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -134,23 +126,6 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
-		F765E2E32ACE17FB000DEF19 /* HAPTIC-XCEL Watch AppTests */ = {
-			isa = PBXGroup;
-			children = (
-				F765E2E42ACE17FB000DEF19 /* HAPTIC_XCEL_Watch_AppTests.swift */,
-			);
-			path = "HAPTIC-XCEL Watch AppTests";
-			sourceTree = "<group>";
-		};
-		F765E2ED2ACE17FB000DEF19 /* HAPTIC-XCEL Watch AppUITests */ = {
-			isa = PBXGroup;
-			children = (
-				F765E2EE2ACE17FB000DEF19 /* HAPTIC_XCEL_Watch_AppUITests.swift */,
-				F765E2F02ACE17FB000DEF19 /* HAPTIC_XCEL_Watch_AppUITestsLaunchTests.swift */,
-			);
-			path = "HAPTIC-XCEL Watch AppUITests";
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -160,6 +135,7 @@
 			buildPhases = (
 				F765E2C62ACE17FA000DEF19 /* Resources */,
 				F765E2F72ACE17FB000DEF19 /* Embed Watch Content */,
+				F765E3012ACE2FFC000DEF19 /* Linter */,
 			);
 			buildRules = (
 			);
@@ -304,6 +280,27 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		F765E3012ACE2FFC000DEF19 /* Linter */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = Linter;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif which swiftlint >/dev/null; then\n  swiftlint\nelse\n  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		F765E2CA2ACE17FA000DEF19 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -318,7 +315,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F765E2E52ACE17FB000DEF19 /* HAPTIC_XCEL_Watch_AppTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -326,8 +322,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F765E2EF2ACE17FB000DEF19 /* HAPTIC_XCEL_Watch_AppUITests.swift in Sources */,
-				F765E2F12ACE17FB000DEF19 /* HAPTIC_XCEL_Watch_AppUITestsLaunchTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
