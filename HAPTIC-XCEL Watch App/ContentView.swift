@@ -19,7 +19,7 @@ struct HomeView: View {
                     .font(.subheadline)
                     .multilineTextAlignment(.center)
                     .padding()
-                NavigationLink(destination: SessionIdView().navigationBarBackButtonHidden(true)) {
+                NavigationLink(destination: SessionIdView(session_id_view: SessionIdViewModel()).navigationBarBackButtonHidden(true)) {
                     Text("Begin Session")
                         .font(.headline)
                         .foregroundColor(.green)
@@ -45,55 +45,88 @@ extension Binding {
     }
 }
 
+class SessionIdViewModel: ObservableObject {
+    @Published var session_id: String = ""
+    @Published var isLoading: Bool = true
+    @Published var reset: Bool = false
+    
+    init() {
+        // Make an HTTP request to get a new session ID.
+        let url = URL(string: base_app_url + "/get-session")!
+        URLSession.shared.dataTask(with: url) { data, _, internal_error in
+            if let data = data {
+                do {
+                    let res = try JSONDecoder().decode(GetSessionResponse.self, from: data)
+                    self.session_id = res.session_id
+                } catch let internal_error {
+                    print(internal_error.localizedDescription)
+                    self.reset = true
+                }
+            }
+            if let internal_error = internal_error {
+                print(internal_error.localizedDescription)
+                self.reset = true
+            }
+            self.isLoading = false
+        }.resume()
+    }
+}
+
 struct SessionIdView: View {
     @Environment(\.dismiss) private var dismiss
-    @State var session_id = ""
-    @State var reset: Bool = false
+    @ObservedObject var session_id_view: SessionIdViewModel
+    
     var body: some View {
         NavigationStack {
             VStack {
-                Text("Session active at")
-                    .padding()
-                Text("haptic-xcel.onrender.com")
-                    .multilineTextAlignment(.center)
-                    .bold()
-                    .font(.system(size: 14))
-                Text("Session ID: \(session_id)")
-                    .bold()
-                Image(systemName: "baseball.diamond.bases")
-                    .font(.largeTitle)
-                    .padding()
-                NavigationLink(destination: SessionView(session_id: self.session_id).navigationBarBackButtonHidden(true)) {
-                    Text("Dismiss")
-                        .font(.headline)
-                }
-                .buttonStyle(.bordered)
-            }.onAppear {
-                // Make an HTTP request to get a new session ID.
-                let url = URL(string: base_app_url + "/get-session")!
-                URLSession.shared.dataTask(with: url) { data, _, internal_error in
-                    if let data = data {
-                        do {
-                            let res = try JSONDecoder().decode(GetSessionResponse.self, from: data)
-                            session_id = res.session_id
-                        } catch let internal_error {
-                            print(internal_error.localizedDescription)
-                            reset = true
+                VStack {
+                    if session_id_view.isLoading {
+                        ProgressView().progressViewStyle(CircularProgressViewStyle())
+                    } else {
+                        Text("Session active at")
+                            .padding()
+                        Text("haptic-xcel.onrender.com")
+                            .multilineTextAlignment(.center)
+                            .bold()
+                            .font(.system(size: 14))
+                        Text("Session ID: \(session_id_view.session_id)")
+                            .bold()
+                        Image(systemName: "baseball.diamond.bases")
+                            .font(.largeTitle)
+                            .padding()
+                        NavigationLink(destination: SessionView(session_id: session_id_view.session_id).navigationBarBackButtonHidden(true)) {
+                            Text("Dismiss")
+                                .font(.headline)
                         }
+                        .buttonStyle(.bordered)
                     }
-                    if let internal_error = internal_error {
-                        print(internal_error.localizedDescription)
-                        reset = true
-                    }
-                }.resume()
-            }.alert(isPresented: $reset) {
-                Alert(
-                    title: Text("Oops! Something went wrong..."),
-                    message: Text("Seems like our servers are down :("),
-                    dismissButton: Alert.Button.default(
-                        Text("Dismiss"), action: { dismiss() }
+                }.onAppear {
+                    // Make an HTTP request to get a new session ID.
+                    let url = URL(string: base_app_url + "/get-session")!
+                    URLSession.shared.dataTask(with: url) { data, _, internal_error in
+                        if let data = data {
+                            do {
+                                let res = try JSONDecoder().decode(GetSessionResponse.self, from: data)
+                                session_id_view.session_id = res.session_id
+                            } catch let internal_error {
+                                print(internal_error.localizedDescription)
+                                session_id_view.reset = true
+                            }
+                        }
+                        if let internal_error = internal_error {
+                            print(internal_error.localizedDescription)
+                            session_id_view.reset = true
+                        }
+                    }.resume()
+                }.alert(isPresented: $session_id_view.reset) {
+                    Alert(
+                        title: Text("Oops! Something went wrong..."),
+                        message: Text("Seems like our servers are down :("),
+                        dismissButton: Alert.Button.default(
+                            Text("Dismiss"), action: { dismiss() }
+                        )
                     )
-                )
+                }
             }
         }
     }
@@ -222,7 +255,7 @@ struct EndSessionView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         HomeView()
-        SessionIdView()
+        SessionIdView(session_id_view: SessionIdViewModel())
         SessionView(session_id: "1234")
         EndSessionView(session_id: "1234")
     }
