@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-let base_app_url: String = "https://haptx-excel.onrender.com"
+let base_app_url: String = "https://haptic-xcel.onrender.com"
 
 struct HomeView: View {
     var body: some View {
@@ -25,7 +25,7 @@ struct HomeView: View {
                         .foregroundColor(.green)
                 }
                 .buttonStyle(.bordered)
-            }.padding()
+            }
         }
     }
 }
@@ -35,34 +35,66 @@ struct GetSessionResponse: Decodable {
     var link: String
 }
 
+extension Binding {
+    func isNotNil<T>() -> Binding<Bool> where Value == T? {
+        .init(get: {
+            wrappedValue != nil
+        }, set: { _ in
+            wrappedValue = nil
+        })
+    }
+}
+
 struct SessionIdView: View {
+    @Environment(\.dismiss) private var dismiss
     @State var session_id = ""
+    @State var reset: Bool = false
     var body: some View {
-        VStack {
-            Text("Session active at")
-            Text("haptic-xcel.com/" + session_id)
-                .bold()
-            Image(systemName: "baseball.diamond.bases")
-                .font(.largeTitle)
-                .padding()
-            NavigationLink(destination: SessionView(session_id: self.session_id).navigationBarBackButtonHidden(true)) {
-                Text("Dismiss")
-                    .font(.headline)
-            }
-            .buttonStyle(.bordered)
-        }.onAppear {
-            // Make an HTTP request to get a new session ID.
-            let url = URL(string: base_app_url + "/get-session")!
-            URLSession.shared.dataTask(with: url) { data, _, error in
-                if let data = data {
-                    do {
-                        let res = try JSONDecoder().decode(GetSessionResponse.self, from: data)
-                        session_id = res.session_id
-                    } catch let error {
-                        // TODO: Make a pop-up that dismisses the user back to the home page.
-                    }
+        NavigationStack {
+            VStack {
+                Text("Session active at")
+                    .padding()
+                Text("haptic-xcel.onrender.com")
+                    .multilineTextAlignment(.center)
+                    .bold()
+                    .font(.system(size: 14))
+                Text("Session ID: \(session_id)")
+                    .bold()
+                Image(systemName: "baseball.diamond.bases")
+                    .font(.largeTitle)
+                    .padding()
+                NavigationLink(destination: SessionView(session_id: self.session_id).navigationBarBackButtonHidden(true)) {
+                    Text("Dismiss")
+                        .font(.headline)
                 }
-            }.resume()
+                .buttonStyle(.bordered)
+            }.onAppear {
+                // Make an HTTP request to get a new session ID.
+                let url = URL(string: base_app_url + "/get-session")!
+                URLSession.shared.dataTask(with: url) { data, _, internal_error in
+                    if let data = data {
+                        do {
+                            let res = try JSONDecoder().decode(GetSessionResponse.self, from: data)
+                            session_id = res.session_id
+                        } catch let internal_error {
+                            print(internal_error.localizedDescription)
+                            reset = true
+                        }
+                    }
+                    if let internal_error = internal_error {
+                        print(internal_error.localizedDescription)
+                        reset = true
+                    }
+                }.resume()
+            }.alert(isPresented: $reset) {
+                Alert(
+                    title: Text("Oops! Something went wrong..."),
+                    message: Text("Seems like our servers are down :("),
+                    dismissButton: Alert.Button.default(
+                        Text("Dismiss"), action: { dismiss() }
+                    )
+                )
+            }
         }
     }
 }
@@ -137,9 +169,9 @@ struct SessionRefresh: View {
                             }
                             Spacer()
                             Text("\(Date().secondsToHoursMinutesSeconds(seconds: (Date().currentTimeMillis() - reaction.timestamp) / 1000)) ago")
-//                            TimelineView(.periodic(from: .now, by: 1)) { timeline in
-//                                Text("\(Date().secondsToHoursMinutesSeconds(seconds: (Date().currentTimeMillis() - reaction.timestamp) / 1000)) ago")
-//                            }
+                                .foregroundColor(.gray)
+                                .bold()
+                                .font(.system(size: 14))
                         }
                     }
                 }
