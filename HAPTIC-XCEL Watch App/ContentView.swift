@@ -8,6 +8,11 @@
 import SwiftUI
 
 let base_app_url: String = "https://haptic-xcel.onrender.com"
+let reaction_id_to_emoji_map: [Int: String] = [
+    1: "✋",
+    2: "😕",
+    3: "💡"
+]
 
 struct HomeView: View {
     var body: some View {
@@ -192,10 +197,8 @@ struct GetReactionResponse: Decodable {
     var userSessionId: String
 }
 
-
 struct SessionRefresh: View {
     @State var reactions: [Reaction] = []
-    @State var error: String?
     var now: Date
     var session_id: String
     
@@ -221,39 +224,40 @@ struct SessionRefresh: View {
             }
             .onChange(of: now) { _ in
                 // Get new reaction for this session.
-                let url = URL(string: base_app_url + "/get-reaction/" + session_id)!
+                let url = URL(string: base_app_url + "/get-reaction/" + self.session_id)!
                 var new_reactions: [String: (Int, Int)] = [:]
                 URLSession.shared.dataTask(with: url) { data, _, internal_error in
                     if let data = data {
                         do {
                             let response = try JSONDecoder().decode([GetReactionResponse].self, from: data)
                             // Accumulate the reaction responses to reduce noise.
-                            for _get_reaction in response {
-                                // TODO: map reaction integer to emoji.
-                                if new_reactions["✋"] != nil {
-                                    new_reactions["✋"]?.0 += 1
+                            for get_reaction in response {
+                                if let reaction_str = reaction_id_to_emoji_map[get_reaction.reaction] {
+                                    if new_reactions[reaction_str] != nil {
+                                        new_reactions[reaction_str]?.0 += 1
+                                    } else {
+                                        new_reactions[reaction_str] = (1, Date().currentTimeMillis())
+                                    }
                                 } else {
-                                    new_reactions["✋"] = (1, Date().currentTimeMillis())
+                                    new_reactions["INVALID REACTION"] = (1, Date().currentTimeMillis())
                                 }
                             }
                         } catch let internal_error {
                             print(internal_error.localizedDescription)
-                            new_reactions["ERROR"] = (1, Date().currentTimeMillis())
+                            new_reactions["JSON ERROR"] = (1, Date().currentTimeMillis())
                         }
                     }
                     if let internal_error = internal_error {
                         print(internal_error.localizedDescription)
-                        new_reactions["ERROR"] = (1, Date().currentTimeMillis())
+                        new_reactions["HTTP ERROR"] = (1, Date().currentTimeMillis())
+                    }
+                    // Insert each unique type of reaction (scaled to quantity) such that it appears in the list.
+                    for new_reaction in new_reactions {
+                        withAnimation(.easeIn) {
+                            self.reactions.insert(Reaction(reaction: new_reaction.key, quantity: new_reaction.value.0, timestamp: new_reaction.value.1), at: 0)
+                        }
                     }
                 }.resume()
-                
-                // Insert each unique type of reaction (scaled to quantity) such that it appears in the list.
-                for new_reaction in new_reactions {
-                    withAnimation(.easeIn) {
-                        self.reactions.insert(Reaction(reaction: new_reaction.key, quantity: new_reaction.value.0, timestamp: new_reaction.value.1), at: 0)
-                    }
-                }
-                self.reactions.insert(Reaction(reaction: "✋", quantity: 1, timestamp: Date().currentTimeMillis()), at: 0)
             }
     }
 }
@@ -280,7 +284,7 @@ struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         HomeView()
         SessionIdView(session_id_view: SessionIdViewModel())
-        SessionView(session_id: "7YL4AJ")
+        SessionView(session_id: "AQ31MN")
         EndSessionView(session_id: "1234")
     }
 }
