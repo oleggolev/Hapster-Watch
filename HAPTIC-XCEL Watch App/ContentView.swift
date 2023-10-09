@@ -47,7 +47,7 @@ extension Binding {
 
 class SessionIdViewModel: ObservableObject {
     @Published var session_id: String = ""
-    @Published var isLoading: Bool = true
+    @Published var is_loading: Bool = true
     @Published var reset: Bool = false
     
     init() {
@@ -67,7 +67,7 @@ class SessionIdViewModel: ObservableObject {
                 print(internal_error.localizedDescription)
                 self.reset = true
             }
-            self.isLoading = false
+            self.is_loading = false
         }.resume()
     }
 }
@@ -80,7 +80,7 @@ struct SessionIdView: View {
         NavigationStack {
             VStack {
                 VStack {
-                    if session_id_view.isLoading {
+                    if session_id_view.is_loading {
                         ProgressView().progressViewStyle(CircularProgressViewStyle())
                     } else {
                         Text("Session active at")
@@ -148,7 +148,7 @@ struct LiveSessionView: View {
        VStack {
            Text("Live Feedback")
            TimelineView(.periodic(from: .now, by: 1)) { timeline in
-               SessionRefresh(now: timeline.date)
+               SessionRefresh(now: timeline.date, session_id: session_id)
            }
            .navigationTitle("ID: " + session_id)
            .navigationBarTitleDisplayMode(.inline)
@@ -185,9 +185,19 @@ extension Date {
     }
 }
 
+struct GetReactionResponse: Decodable {
+    var reaction: Int
+    var timeStamp: String
+    var sessionId: String
+    var userSessionId: String
+}
+
+
 struct SessionRefresh: View {
     @State var reactions: [Reaction] = []
+    @State var error: String?
     var now: Date
+    var session_id: String
     
     var body: some View {
             VStack {
@@ -210,26 +220,40 @@ struct SessionRefresh: View {
                 }
             }
             .onChange(of: now) { _ in
-                // Obtain a new reaction from the API server and timestamp it.
-                var new_reactions: [Reaction] = [Reaction(reaction: "✋", quantity: 2, timestamp: 1696536101113), Reaction(reaction: "😕", quantity: 1, timestamp: 1696536101113)]
-                let url = URL(string: "https://jsonplaceholder.typicode.com/users")!
-                let task = URLSession.shared.dataTask(with: url) { data, response, error in
-                    let timestamp = Date().currentTimeMillis()
+                // Get new reaction for this session.
+                let url = URL(string: base_app_url + "/get-reaction/" + session_id)!
+                var new_reactions: [String: (Int, Int)] = [:]
+                URLSession.shared.dataTask(with: url) { data, _, internal_error in
                     if let data = data {
-                        // TODO: If data was successfully acquired, process all reactions and add them to new_reactions.
-                    } else if let error = error {
-                        new_reactions.append(Reaction(reaction: "HTTP Error: Contact Administrator", quantity: 1, timestamp: timestamp))
-                    }
-                }
-                // Insert each unique type of reaction (scaled to quantity) appear in the list.
-                for new_reaction in new_reactions {
-                    let random_num = Int.random(in: 1..<100)
-                    if random_num > 90 {
-                        withAnimation(.easeIn) {
-                            self.reactions.insert(new_reaction, at: 0)
+                        do {
+                            let response = try JSONDecoder().decode([GetReactionResponse].self, from: data)
+                            // Accumulate the reaction responses to reduce noise.
+                            for _get_reaction in response {
+                                // TODO: map reaction integer to emoji.
+                                if new_reactions["✋"] != nil {
+                                    new_reactions["✋"]?.0 += 1
+                                } else {
+                                    new_reactions["✋"] = (1, Date().currentTimeMillis())
+                                }
+                            }
+                        } catch let internal_error {
+                            print(internal_error.localizedDescription)
+                            new_reactions["ERROR"] = (1, Date().currentTimeMillis())
                         }
                     }
+                    if let internal_error = internal_error {
+                        print(internal_error.localizedDescription)
+                        new_reactions["ERROR"] = (1, Date().currentTimeMillis())
+                    }
+                }.resume()
+                
+                // Insert each unique type of reaction (scaled to quantity) such that it appears in the list.
+                for new_reaction in new_reactions {
+                    withAnimation(.easeIn) {
+                        self.reactions.insert(Reaction(reaction: new_reaction.key, quantity: new_reaction.value.0, timestamp: new_reaction.value.1), at: 0)
+                    }
                 }
+                self.reactions.insert(Reaction(reaction: "✋", quantity: 1, timestamp: Date().currentTimeMillis()), at: 0)
             }
     }
 }
@@ -256,7 +280,7 @@ struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         HomeView()
         SessionIdView(session_id_view: SessionIdViewModel())
-        SessionView(session_id: "1234")
+        SessionView(session_id: "7YL4AJ")
         EndSessionView(session_id: "1234")
     }
 }
