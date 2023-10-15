@@ -6,8 +6,10 @@
 //
 
 import SwiftUI
+import UserNotifications
 
-let base_app_url: String = "https://haptic-xcel.onrender.com"
+let BASE_APP_URL: String = "https://haptic-xcel.onrender.com"
+let REACTION_POOLING_INTERVAL_MS: Int = 5000
 let reaction_id_to_emoji_map: [Int: String] = [
     1: "✋",
     2: "😕",
@@ -30,6 +32,14 @@ struct HomeView: View {
                         .foregroundColor(.green)
                 }
                 .buttonStyle(.bordered)
+            }.onAppear {
+                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
+                    if success {
+                        print("All set!")
+                    } else if let error = error {
+                        print(error.localizedDescription)
+                    }
+                }
             }
         }
     }
@@ -57,7 +67,9 @@ class SessionIdViewModel: ObservableObject {
     
     init() {
         // Make an HTTP request to get a new session ID.
-        let url = URL(string: base_app_url + "/get-session")!
+        self.is_loading = true
+        self.reset = false
+        let url = URL(string: BASE_APP_URL + "/get-session")!
         URLSession.shared.dataTask(with: url) { data, _, internal_error in
             if let data = data {
                 do {
@@ -89,11 +101,12 @@ struct SessionIdView: View {
                         ProgressView().progressViewStyle(CircularProgressViewStyle())
                     } else {
                         Text("Session active at")
+                            .font(.system(size: 14))
                             .padding()
-                        Text("haptic-xcel.onrender.com")
+                        Text("haptic-excel.onrender.com")
                             .multilineTextAlignment(.center)
                             .bold()
-                            .font(.system(size: 14))
+                            .font(.system(size: 12))
                         Text("Session ID: \(session_id_view.session_id)")
                             .bold()
                         Image(systemName: "baseball.diamond.bases")
@@ -105,24 +118,6 @@ struct SessionIdView: View {
                         }
                         .buttonStyle(.bordered)
                     }
-                }.onAppear {
-                    // Make an HTTP request to get a new session ID.
-                    let url = URL(string: base_app_url + "/get-session")!
-                    URLSession.shared.dataTask(with: url) { data, _, internal_error in
-                        if let data = data {
-                            do {
-                                let res = try JSONDecoder().decode(GetSessionResponse.self, from: data)
-                                session_id_view.session_id = res.session_id
-                            } catch let internal_error {
-                                print(internal_error.localizedDescription)
-                                session_id_view.reset = true
-                            }
-                        }
-                        if let internal_error = internal_error {
-                            print(internal_error.localizedDescription)
-                            session_id_view.reset = true
-                        }
-                    }.resume()
                 }.alert(isPresented: $session_id_view.reset) {
                     Alert(
                         title: Text("Oops! Something went wrong..."),
@@ -224,10 +219,16 @@ struct SessionRefresh: View {
             }
             .onChange(of: now) { _ in
                 // Get new reaction for this session.
-                let url = URL(string: base_app_url + "/get-reaction/" + self.session_id)!
+                let url = URL(string: BASE_APP_URL + "/get-reaction/" + self.session_id)!
                 var new_reactions: [String: (Int, Int)] = [:]
                 URLSession.shared.dataTask(with: url) { data, _, internal_error in
                     if let data = data {
+                        if let string = String(bytes: data, encoding: .utf8) {
+                            print(string)
+                        } else {
+                            print("not a valid UTF-8 sequence")
+                        }
+                        print(data)
                         do {
                             let response = try JSONDecoder().decode([GetReactionResponse].self, from: data)
                             // Accumulate the reaction responses to reduce noise.
@@ -251,16 +252,37 @@ struct SessionRefresh: View {
                         print(internal_error.localizedDescription)
                         new_reactions["HTTP ERROR"] = (1, Date().currentTimeMillis())
                     }
-                    // Insert each unique type of reaction (scaled to quantity) such that it appears in the list.
+                    // Insert each unique type of reaction (scaled to quantity)
+                    // such that it appears in the list.
                     for new_reaction in new_reactions {
-                        withAnimation(.easeIn) {
-                            self.reactions.insert(Reaction(reaction: new_reaction.key, quantity: new_reaction.value.0, timestamp: new_reaction.value.1), at: 0)
+                        var idx = 0
+                        var added = false
+                        print(self.reactions.count)
+                        while idx < self.reactions.count {
+                            print(self.reactions[idx].reaction)
+                            print(new_reaction.key)
+                            print(self.reactions[idx].timestamp - new_reaction.value.1)
+                            if self.reactions[idx].reaction == new_reaction.key && abs(self.reactions[idx].timestamp - new_reaction.value.1) <= REACTION_POOLING_INTERVAL_MS {
+                                self.reactions[idx].quantity += new_reaction.value.0
+                                added = true
+                            }
+                            idx += 1
+                        }
+                        // If this is a completely new reaction sent in the last
+                        // REACTION_POOLING_INTERVAL_MS time period, then insert
+                        // as new row and create a notification with haptic pattern.
+                        if !added {
+                            withAnimation(.easeIn) {
+                                self.reactions.insert(Reaction(reaction: new_reaction.key, quantity: new_reaction.value.0, timestamp: new_reaction.value.1), at: 0)
+                            }
                         }
                     }
                 }.resume()
             }
     }
 }
+
+
 
 struct EndSessionView: View {
     var session_id: String
@@ -276,6 +298,18 @@ struct EndSessionView: View {
                     .foregroundColor(.red)
             }
             .buttonStyle(.bordered)
+            .simultaneousGesture(TapGesture().onEnded {
+                let url = URL(string: BASE_APP_URL + "/end-session")!
+                URLSession.shared.dataTask(with: url) { data, _, internal_error in
+                    if let data = data {
+                        print(data)
+                        print("Session \(session_id) successfully terminated.")
+                    }
+                    if let internal_error = internal_error {
+                        print("Ending session \(session_id) failed with error \(internal_error.localizedDescription)")
+                    }
+                }.resume()
+            })
         }
     }
 }
@@ -284,7 +318,7 @@ struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         HomeView()
         SessionIdView(session_id_view: SessionIdViewModel())
-        SessionView(session_id: "AQ31MN")
+        SessionView(session_id: "ZHD2222IIK")
         EndSessionView(session_id: "1234")
     }
 }
