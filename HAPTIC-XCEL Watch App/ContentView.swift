@@ -213,33 +213,35 @@ struct SessionRefresh: View {
                 URLSession.shared.dataTask(with: url) { data, response, internal_error in
                     if let httpResponse = response as? HTTPURLResponse {
                         if httpResponse.statusCode != 200 {
+                            new_reactions["❌"] = (1, Date().currentTimeMillis())
                             print("ERROR: could not get reactions for session \(session_id), received error code \(httpResponse.statusCode).")
-                            return
-                        }
-                    }
-                    if let data = data {
-                        do {
-                            let response = try JSONDecoder().decode([GetReactionResponse].self, from: data)
-                            // Accumulate the reaction responses to reduce noise.
-                            for get_reaction in response {
-                                if let reaction_str = REACTION_ID_TO_EMOJI_MAP[get_reaction.reaction] {
-                                    if new_reactions[reaction_str] != nil {
-                                        new_reactions[reaction_str]?.0 += 1
-                                    } else {
-                                        new_reactions[reaction_str] = (1, Date().currentTimeMillis())
+                        } else {
+                            // 200 OK
+                            if let data = data {
+                                do {
+                                    let response = try JSONDecoder().decode([GetReactionResponse].self, from: data)
+                                    // Accumulate the reaction responses to reduce noise.
+                                    for get_reaction in response {
+                                        if let reaction_str = REACTION_ID_TO_EMOJI_MAP[get_reaction.reaction] {
+                                            if new_reactions[reaction_str] != nil {
+                                                new_reactions[reaction_str]?.0 += 1
+                                            } else {
+                                                new_reactions[reaction_str] = (1, Date().currentTimeMillis())
+                                            }
+                                        } else {
+                                            new_reactions["⚠️"] = (1, Date().currentTimeMillis())
+                                        }
                                     }
-                                } else {
-                                    new_reactions["INVALID REACTION"] = (1, Date().currentTimeMillis())
+                                } catch let internal_error {
+                                    print("ERROR: could not unpack JSON when receiving reaction for session \(self.session_id): \(internal_error.localizedDescription)")
+                                    new_reactions["📦"] = (1, Date().currentTimeMillis())
                                 }
                             }
-                        } catch let internal_error {
-                            print("ERROR: could not unpack JSON when receiving reaction for session \(self.session_id): \(internal_error.localizedDescription)")
-                            new_reactions["JSON ERROR"] = (1, Date().currentTimeMillis())
                         }
                     }
                     if let internal_error = internal_error {
                         print("ERROR: could not get reaction for session \(self.session_id), received error \(internal_error.localizedDescription)")
-                        new_reactions["HTTP ERROR"] = (1, Date().currentTimeMillis())
+                        new_reactions["🔌"] = (1, Date().currentTimeMillis())
                     }
                     // Insert each unique type of reaction (scaled to quantity) such that it appears in the list.
                     for new_reaction in new_reactions {
@@ -301,6 +303,6 @@ struct EndSessionView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         HomeView()
-        SessionView(session_id: "SI8GXT")
+        SessionView(session_id: "SI8GXTT")
     }
 }
