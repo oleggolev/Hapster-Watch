@@ -133,14 +133,14 @@ struct SessionView: View {
 struct LiveSessionView: View {
     var session_id: String
     var body: some View {
-       VStack {
-           Text("Live Feedback")
-           TimelineView(.periodic(from: .now, by: 1)) { timeline in
-               SessionRefresh(now: timeline.date, session_id: session_id)
-           }
-           .navigationTitle("ID: " + session_id)
-           .navigationBarTitleDisplayMode(.inline)
-       }
+        VStack {
+            Text("Live Feedback")
+            TimelineView(.periodic(from: .now, by: 1)) { timeline in
+                SessionRefresh(now: timeline.date, session_id: session_id)
+            }
+            .navigationTitle("ID: " + session_id)
+            .navigationBarTitleDisplayMode(.inline)
+        }
     }
 }
 
@@ -191,6 +191,7 @@ struct SessionRefresh: View {
                     ForEach(self.reactions, id: \.self) { reaction in
                         HStack {
                             Text("\(reaction.reaction)")
+                                .font(.title)
                             if reaction.quantity > 1 {
                                 Text(" x\(reaction.quantity)")
                             } else {
@@ -300,6 +301,6 @@ struct EndSessionView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         HomeView()
-        SessionView(session_id: "RBAGO6")
+        SessionView(session_id: "SI8GXT")
     }
 }
