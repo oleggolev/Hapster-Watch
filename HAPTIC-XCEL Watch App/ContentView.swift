@@ -10,7 +10,7 @@ import UserNotifications
 
 let BASE_APP_URL: String = "https://haptic-xcel.onrender.com"
 let REACTION_POOLING_INTERVAL_MS: Int = 5000
-let reaction_id_to_emoji_map: [Int: String] = [
+let REACTION_ID_TO_EMOJI_MAP: [Int: String] = [
     1: "✋",
     2: "😕",
     3: "💡"
@@ -32,14 +32,6 @@ struct HomeView: View {
                         .foregroundColor(.green)
                 }
                 .buttonStyle(.bordered)
-            }.onAppear {
-                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
-                    if success {
-                        print("All set!")
-                    } else if let error = error {
-                        print(error.localizedDescription)
-                    }
-                }
             }
         }
     }
@@ -50,38 +42,35 @@ struct GetSessionResponse: Decodable {
     var link: String
 }
 
-extension Binding {
-    func isNotNil<T>() -> Binding<Bool> where Value == T? {
-        .init(get: {
-            wrappedValue != nil
-        }, set: { _ in
-            wrappedValue = nil
-        })
-    }
-}
-
 class SessionIdViewModel: ObservableObject {
-    @Published var session_id: String = ""
-    @Published var is_loading: Bool = true
-    @Published var reset: Bool = false
+    @Published var is_loading: Bool
+    var session_id: String = ""
+    var reset: Bool
     
     init() {
-        // Make an HTTP request to get a new session ID.
         self.is_loading = true
         self.reset = false
+        // Make an HTTP request to get a new session ID.
         let url = URL(string: BASE_APP_URL + "/get-session")!
-        URLSession.shared.dataTask(with: url) { data, _, internal_error in
+        URLSession.shared.dataTask(with: url) { data, response, internal_error in
+            if let httpResponse = response as? HTTPURLResponse {
+                if httpResponse.statusCode != 200 {
+                    print("ERROR: could not start new session, received error code \(httpResponse.statusCode).")
+                    self.reset = true
+                }
+            }
             if let data = data {
                 do {
                     let res = try JSONDecoder().decode(GetSessionResponse.self, from: data)
+                    print("Session \(res.session_id) created successfully.")
                     self.session_id = res.session_id
                 } catch let internal_error {
-                    print(internal_error.localizedDescription)
+                    print("ERROR: could not unpack JSON when creating session: \(internal_error.localizedDescription)")
                     self.reset = true
                 }
             }
             if let internal_error = internal_error {
-                print(internal_error.localizedDescription)
+                print("ERROR: could not start new session, received error \(internal_error.localizedDescription)")
                 self.reset = true
             }
             self.is_loading = false
@@ -91,7 +80,7 @@ class SessionIdViewModel: ObservableObject {
 
 struct SessionIdView: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject var session_id_view: SessionIdViewModel
+    @StateObject var session_id_view: SessionIdViewModel
     
     var body: some View {
         NavigationStack {
@@ -223,17 +212,11 @@ struct SessionRefresh: View {
                 var new_reactions: [String: (Int, Int)] = [:]
                 URLSession.shared.dataTask(with: url) { data, _, internal_error in
                     if let data = data {
-                        if let string = String(bytes: data, encoding: .utf8) {
-                            print(string)
-                        } else {
-                            print("not a valid UTF-8 sequence")
-                        }
-                        print(data)
                         do {
                             let response = try JSONDecoder().decode([GetReactionResponse].self, from: data)
                             // Accumulate the reaction responses to reduce noise.
                             for get_reaction in response {
-                                if let reaction_str = reaction_id_to_emoji_map[get_reaction.reaction] {
+                                if let reaction_str = REACTION_ID_TO_EMOJI_MAP[get_reaction.reaction] {
                                     if new_reactions[reaction_str] != nil {
                                         new_reactions[reaction_str]?.0 += 1
                                     } else {
@@ -244,12 +227,12 @@ struct SessionRefresh: View {
                                 }
                             }
                         } catch let internal_error {
-                            print(internal_error.localizedDescription)
+                            print("ERROR: could not unpack JSON when receiving reaction for session \(self.session_id): \(internal_error.localizedDescription)")
                             new_reactions["JSON ERROR"] = (1, Date().currentTimeMillis())
                         }
                     }
                     if let internal_error = internal_error {
-                        print(internal_error.localizedDescription)
+                        print("ERROR: could not get reaction for session \(self.session_id), received error \(internal_error.localizedDescription)")
                         new_reactions["HTTP ERROR"] = (1, Date().currentTimeMillis())
                     }
                     // Insert each unique type of reaction (scaled to quantity)
@@ -257,11 +240,7 @@ struct SessionRefresh: View {
                     for new_reaction in new_reactions {
                         var idx = 0
                         var added = false
-                        print(self.reactions.count)
                         while idx < self.reactions.count {
-                            print(self.reactions[idx].reaction)
-                            print(new_reaction.key)
-                            print(self.reactions[idx].timestamp - new_reaction.value.1)
                             if self.reactions[idx].reaction == new_reaction.key && abs(self.reactions[idx].timestamp - new_reaction.value.1) <= REACTION_POOLING_INTERVAL_MS {
                                 self.reactions[idx].quantity += new_reaction.value.0
                                 added = true
@@ -282,8 +261,6 @@ struct SessionRefresh: View {
     }
 }
 
-
-
 struct EndSessionView: View {
     var session_id: String
     var body: some View {
@@ -300,13 +277,16 @@ struct EndSessionView: View {
             .buttonStyle(.bordered)
             .simultaneousGesture(TapGesture().onEnded {
                 let url = URL(string: BASE_APP_URL + "/end-session")!
-                URLSession.shared.dataTask(with: url) { data, _, internal_error in
-                    if let data = data {
-                        print(data)
-                        print("Session \(session_id) successfully terminated.")
+                URLSession.shared.dataTask(with: url) { _, response, internal_error in
+                    if let httpResponse = response as? HTTPURLResponse {
+                        if httpResponse.statusCode == 200 {
+                            print("Session \(session_id) ended successfully.")
+                        } else {
+                            print("ERROR: could not end session \(session_id), received error code \(httpResponse.statusCode).")
+                        }
                     }
                     if let internal_error = internal_error {
-                        print("Ending session \(session_id) failed with error \(internal_error.localizedDescription)")
+                        print("ERROR: could not end session, received error \(internal_error.localizedDescription)")
                     }
                 }.resume()
             })
@@ -317,8 +297,8 @@ struct EndSessionView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         HomeView()
-        SessionIdView(session_id_view: SessionIdViewModel())
-        SessionView(session_id: "ZHD2222IIK")
-        EndSessionView(session_id: "1234")
+//        SessionIdView(session_id_view: SessionIdViewModel())
+//        SessionView(session_id: "5")
+//        EndSessionView(session_id: "TP10GL")
     }
 }
