@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import UserNotifications
 
 let BASE_APP_URL: String = "https://haptic-xcel.onrender.com"
 let REACTION_POOLING_INTERVAL_MS: Int = 5000
@@ -51,7 +50,7 @@ class SessionIdViewModel: ObservableObject {
         self.is_loading = true
         self.reset = false
         // Make an HTTP request to get a new session ID.
-        let url = URL(string: BASE_APP_URL + "/get-session")!
+        let url = URL(string: "\(BASE_APP_URL)/get-session")!
         URLSession.shared.dataTask(with: url) { data, response, internal_error in
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode != 200 {
@@ -208,9 +207,15 @@ struct SessionRefresh: View {
             }
             .onChange(of: now) { _ in
                 // Get new reaction for this session.
-                let url = URL(string: BASE_APP_URL + "/get-reaction/" + self.session_id)!
+                let url = URL(string: "\(BASE_APP_URL)/get-reaction/\(self.session_id)")!
                 var new_reactions: [String: (Int, Int)] = [:]
-                URLSession.shared.dataTask(with: url) { data, _, internal_error in
+                URLSession.shared.dataTask(with: url) { data, response, internal_error in
+                    if let httpResponse = response as? HTTPURLResponse {
+                        if httpResponse.statusCode != 200 {
+                            print("ERROR: could not get reactions for session \(session_id), received error code \(httpResponse.statusCode).")
+                            return
+                        }
+                    }
                     if let data = data {
                         do {
                             let response = try JSONDecoder().decode([GetReactionResponse].self, from: data)
@@ -235,8 +240,7 @@ struct SessionRefresh: View {
                         print("ERROR: could not get reaction for session \(self.session_id), received error \(internal_error.localizedDescription)")
                         new_reactions["HTTP ERROR"] = (1, Date().currentTimeMillis())
                     }
-                    // Insert each unique type of reaction (scaled to quantity)
-                    // such that it appears in the list.
+                    // Insert each unique type of reaction (scaled to quantity) such that it appears in the list.
                     for new_reaction in new_reactions {
                         var idx = 0
                         var added = false
@@ -247,9 +251,8 @@ struct SessionRefresh: View {
                             }
                             idx += 1
                         }
-                        // If this is a completely new reaction sent in the last
-                        // REACTION_POOLING_INTERVAL_MS time period, then insert
-                        // as new row and create a notification with haptic pattern.
+                        // If this is a completely new reaction sent in the last REACTION_POOLING_INTERVAL_MS
+                        // time period, then insert as new row and create a notification with haptic pattern.
                         if !added {
                             withAnimation(.easeIn) {
                                 self.reactions.insert(Reaction(reaction: new_reaction.key, quantity: new_reaction.value.0, timestamp: new_reaction.value.1), at: 0)
@@ -276,7 +279,7 @@ struct EndSessionView: View {
             }
             .buttonStyle(.bordered)
             .simultaneousGesture(TapGesture().onEnded {
-                let url = URL(string: BASE_APP_URL + "/end-session")!
+                let url = URL(string: "\(BASE_APP_URL)/end-session/\(self.session_id)")!
                 URLSession.shared.dataTask(with: url) { _, response, internal_error in
                     if let httpResponse = response as? HTTPURLResponse {
                         if httpResponse.statusCode == 200 {
@@ -297,8 +300,6 @@ struct EndSessionView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         HomeView()
-//        SessionIdView(session_id_view: SessionIdViewModel())
-//        SessionView(session_id: "5")
-//        EndSessionView(session_id: "TP10GL")
+        SessionView(session_id: "RBAGO6")
     }
 }
