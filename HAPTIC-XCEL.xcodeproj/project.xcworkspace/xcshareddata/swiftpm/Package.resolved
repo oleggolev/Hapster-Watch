@@ -1,0 +1,23 @@
+{
+  "pins" : [
+    {
+      "identity" : "datebuilder",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/dreymonde/DateBuilder",
+      "state" : {
+        "revision" : "374ca554ed132f84bc97158901e6208c9608a6bc",
+        "version" : "0.1.4"
+      }
+    },
+    {
+      "identity" : "nicenotifications",
+      "kind" : "remoteSourceControl",
+      "location" : "http://github.com/nicephoton/NiceNotifications.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "dc24879ac7979efdea18a2c1f7a8bb6c364d16e6"
+      }
+    }
+  ],
+  "version" : 2
+}

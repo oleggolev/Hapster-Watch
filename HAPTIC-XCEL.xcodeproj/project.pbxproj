@@ -12,6 +12,11 @@
 		F765E2D62ACE17FA000DEF19 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F765E2D52ACE17FA000DEF19 /* ContentView.swift */; };
 		F765E2D82ACE17FB000DEF19 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F765E2D72ACE17FB000DEF19 /* Assets.xcassets */; };
 		F765E2DB2ACE17FB000DEF19 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F765E2DA2ACE17FB000DEF19 /* Preview Assets.xcassets */; };
+		F77060D12ADDC227005F0FC7 /* NiceNotifications in Frameworks */ = {isa = PBXBuildFile; productRef = F77060D02ADDC227005F0FC7 /* NiceNotifications */; };
+		F77060D32ADDC8DE005F0FC7 /* RequestRetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77060D22ADDC8DE005F0FC7 /* RequestRetry.swift */; };
+		F77D44622ADD907C00F59D26 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77D44612ADD907C00F59D26 /* SessionManager.swift */; };
+		F7D393BB2ADCAB3600F1AE52 /* LocalNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7D393BA2ADCAB3600F1AE52 /* LocalNotificationManager.swift */; };
+		F7D393BD2ADCB40F00F1AE52 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7D393BC2ADCB40F00F1AE52 /* HapticManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +58,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		F7000DBB2ADD065700CCB63F /* HAPTIC-XCEL-Watch-App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "HAPTIC-XCEL-Watch-App-Info.plist"; sourceTree = SOURCE_ROOT; };
 		F765E2C82ACE17FA000DEF19 /* HAPTIC-XCEL.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "HAPTIC-XCEL.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F765E2CE2ACE17FA000DEF19 /* HAPTIC-XCEL Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "HAPTIC-XCEL Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F765E2D32ACE17FA000DEF19 /* HAPTIC_XCELApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HAPTIC_XCELApp.swift; sourceTree = "<group>"; };
@@ -61,6 +67,10 @@
 		F765E2DA2ACE17FB000DEF19 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		F765E2E02ACE17FB000DEF19 /* HAPTIC-XCEL Watch AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "HAPTIC-XCEL Watch AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F765E2EA2ACE17FB000DEF19 /* HAPTIC-XCEL Watch AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "HAPTIC-XCEL Watch AppUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F77060D22ADDC8DE005F0FC7 /* RequestRetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestRetry.swift; sourceTree = "<group>"; };
+		F77D44612ADD907C00F59D26 /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
+		F7D393BA2ADCAB3600F1AE52 /* LocalNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNotificationManager.swift; sourceTree = "<group>"; };
+		F7D393BC2ADCB40F00F1AE52 /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +78,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F77060D12ADDC227005F0FC7 /* NiceNotifications in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -110,10 +121,15 @@
 		F765E2D22ACE17FA000DEF19 /* HAPTIC-XCEL Watch App */ = {
 			isa = PBXGroup;
 			children = (
+				F7000DBB2ADD065700CCB63F /* HAPTIC-XCEL-Watch-App-Info.plist */,
 				F765E2D32ACE17FA000DEF19 /* HAPTIC_XCELApp.swift */,
 				F765E2D52ACE17FA000DEF19 /* ContentView.swift */,
 				F765E2D72ACE17FB000DEF19 /* Assets.xcassets */,
 				F765E2D92ACE17FB000DEF19 /* Preview Content */,
+				F7D393BA2ADCAB3600F1AE52 /* LocalNotificationManager.swift */,
+				F77D44612ADD907C00F59D26 /* SessionManager.swift */,
+				F7D393BC2ADCB40F00F1AE52 /* HapticManager.swift */,
+				F77060D22ADDC8DE005F0FC7 /* RequestRetry.swift */,
 			);
 			path = "HAPTIC-XCEL Watch App";
 			sourceTree = "<group>";
@@ -160,6 +176,9 @@
 			dependencies = (
 			);
 			name = "HAPTIC-XCEL Watch App";
+			packageProductDependencies = (
+				F77060D02ADDC227005F0FC7 /* NiceNotifications */,
+			);
 			productName = "HAPTIC-XCEL Watch App";
 			productReference = F765E2CE2ACE17FA000DEF19 /* HAPTIC-XCEL Watch App.app */;
 			productType = "com.apple.product-type.application";
@@ -235,6 +254,9 @@
 				Base,
 			);
 			mainGroup = F765E2C12ACE17F9000DEF19;
+			packageReferences = (
+				F77060CF2ADDC227005F0FC7 /* XCRemoteSwiftPackageReference "NiceNotifications" */,
+			);
 			productRefGroup = F765E2C92ACE17FA000DEF19 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -306,7 +328,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F77060D32ADDC8DE005F0FC7 /* RequestRetry.swift in Sources */,
+				F7D393BB2ADCAB3600F1AE52 /* LocalNotificationManager.swift in Sources */,
 				F765E2D62ACE17FA000DEF19 /* ContentView.swift in Sources */,
+				F7D393BD2ADCB40F00F1AE52 /* HapticManager.swift in Sources */,
+				F77D44622ADD907C00F59D26 /* SessionManager.swift in Sources */,
 				F765E2D42ACE17FA000DEF19 /* HAPTIC_XCELApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -463,8 +489,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"HAPTIC-XCEL Watch App/Preview Content\"";
+				DEVELOPMENT_TEAM = 2798NH7G2Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "HAPTIC-XCEL-Watch-App-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "HAPTIC-XCEL";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKWatchOnly = YES;
@@ -492,8 +520,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"HAPTIC-XCEL Watch App/Preview Content\"";
+				DEVELOPMENT_TEAM = 2798NH7G2Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "HAPTIC-XCEL-Watch-App-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "HAPTIC-XCEL";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKWatchOnly = YES;
@@ -520,6 +550,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2798NH7G2Y;
 				INFOPLIST_KEY_CFBundleDisplayName = "HAPTIC-XCEL";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "hci.HAPTIC-XCEL";
@@ -535,6 +566,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2798NH7G2Y;
 				INFOPLIST_KEY_CFBundleDisplayName = "HAPTIC-XCEL";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "hci.HAPTIC-XCEL";
@@ -674,6 +706,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F77060CF2ADDC227005F0FC7 /* XCRemoteSwiftPackageReference "NiceNotifications" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "http://github.com/nicephoton/NiceNotifications.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F77060D02ADDC227005F0FC7 /* NiceNotifications */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F77060CF2ADDC227005F0FC7 /* XCRemoteSwiftPackageReference "NiceNotifications" */;
+			productName = NiceNotifications;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F765E2C22ACE17F9000DEF19 /* Project object */;
 }

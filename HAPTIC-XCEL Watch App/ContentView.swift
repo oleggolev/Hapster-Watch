@@ -9,11 +9,15 @@ import SwiftUI
 
 let BASE_APP_URL: String = "https://haptic-xcel.onrender.com"
 let REACTION_POOLING_INTERVAL_MS: Int = 5000
+let SESSION_REFRESH_OFFSET_MS: Int64 = 60000
 let REACTION_ID_TO_EMOJI_MAP: [Int: String] = [
     1: "✋",
     2: "😕",
     3: "💡"
 ]
+// TODO: notification manager currently does not work.
+let haptic_manager = HapticManager()
+let session_manager = SessionManager()
 
 struct HomeView: View {
     var body: some View {
@@ -69,7 +73,7 @@ class SessionIdViewModel: ObservableObject {
                 }
             }
             if let internal_error = internal_error {
-                print("ERROR: could not start new session, received error \(internal_error.localizedDescription)")
+                print("ERROR: could not start new session, received error: \(internal_error.localizedDescription)")
                 self.reset = true
             }
             self.is_loading = false
@@ -122,16 +126,20 @@ struct SessionIdView: View {
 
 struct SessionView: View {
     var session_id: String
+    
     var body: some View {
         TabView {
             LiveSessionView(session_id: self.session_id)
             EndSessionView(session_id: self.session_id)
+        }.onAppear {
+            session_manager.startSession()
         }
     }
 }
 
 struct LiveSessionView: View {
     var session_id: String
+    
     var body: some View {
         VStack {
             Text("Live Feedback")
@@ -147,7 +155,7 @@ struct LiveSessionView: View {
 struct Reaction: Hashable {
     var reaction: String
     var quantity: Int
-    var timestamp: Int
+    var timestamp: Int64
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(self.reaction)
@@ -157,10 +165,11 @@ struct Reaction: Hashable {
 }
 
 extension Date {
-    func currentTimeMillis() -> Int {
-        return Int(self.timeIntervalSince1970 * 1000)
+    func currentTimeMillis() -> Int64 {
+        return Int64(self.timeIntervalSince1970 * 1000)
     }
-    func secondsToHoursMinutesSeconds(seconds: Int) -> String {
+    
+    func secondsToHoursMinutesSeconds(seconds: Int64) -> String {
         let (hours, minutes, seconds) = (seconds / 3600, (seconds % 3600) / 60, (seconds % 3600) % 60)
         var time_str = ""
         if hours != 0 {
@@ -198,7 +207,7 @@ struct SessionRefresh: View {
                                 Text("")
                             }
                             Spacer()
-                            Text("\(Date().secondsToHoursMinutesSeconds(seconds: (Date().currentTimeMillis() - reaction.timestamp) / 1000)) ago")
+                            Text("\(Date().secondsToHoursMinutesSeconds(seconds: (Date().currentTimeMillis() - Int64(reaction.timestamp)) / 1000)) ago")
                                 .foregroundColor(.gray)
                                 .bold()
                                 .font(.system(size: 14))
@@ -207,16 +216,19 @@ struct SessionRefresh: View {
                 }
             }
             .onChange(of: now) { _ in
+                // Refresh WatchKit extended session if necessary.
+                session_manager.refreshSession()
+                
                 // Get new reaction for this session.
                 let url = URL(string: "\(BASE_APP_URL)/get-reaction/\(self.session_id)")!
-                var new_reactions: [String: (Int, Int)] = [:]
+                var new_reactions: [String: (Int, Int64)] = [:]
                 URLSession.shared.dataTask(with: url) { data, response, internal_error in
                     if let httpResponse = response as? HTTPURLResponse {
                         if httpResponse.statusCode != 200 {
                             new_reactions["❌"] = (1, Date().currentTimeMillis())
                             print("ERROR: could not get reactions for session \(session_id), received error code \(httpResponse.statusCode).")
                         } else {
-                            // 200 OK
+                            // Success: 200 OK
                             if let data = data {
                                 do {
                                     let response = try JSONDecoder().decode([GetReactionResponse].self, from: data)
@@ -248,7 +260,7 @@ struct SessionRefresh: View {
                         var idx = 0
                         var added = false
                         while idx < self.reactions.count {
-                            if self.reactions[idx].reaction == new_reaction.key && abs(self.reactions[idx].timestamp - new_reaction.value.1) <= REACTION_POOLING_INTERVAL_MS {
+                            if self.reactions[idx].reaction == new_reaction.key && abs(Int64(self.reactions[idx].timestamp) - new_reaction.value.1) <= REACTION_POOLING_INTERVAL_MS {
                                 self.reactions[idx].quantity += new_reaction.value.0
                                 added = true
                             }
@@ -260,15 +272,18 @@ struct SessionRefresh: View {
                             withAnimation(.easeIn) {
                                 self.reactions.insert(Reaction(reaction: new_reaction.key, quantity: new_reaction.value.0, timestamp: new_reaction.value.1), at: 0)
                             }
+                            haptic_manager.playPattern(reaction: new_reaction.key)
                         }
                     }
                 }.resume()
             }
     }
+    
 }
 
 struct EndSessionView: View {
     var session_id: String
+    
     var body: some View {
         VStack {
             Text("Done teaching the current session?")
@@ -295,6 +310,7 @@ struct EndSessionView: View {
                         print("ERROR: could not end session, received error \(internal_error.localizedDescription)")
                     }
                 }.resume()
+                session_manager.endSession()
             })
         }
     }
@@ -303,6 +319,6 @@ struct EndSessionView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         HomeView()
-        SessionView(session_id: "SI8GXTT")
+        SessionView(session_id: "5OZRY7")
     }
 }
