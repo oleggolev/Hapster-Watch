@@ -8,12 +8,12 @@
 import SwiftUI
 
 let BASE_APP_URL: String = "https://haptic-xcel.onrender.com"
-let REACTION_POOLING_INTERVAL_MS: Int = 5000
+let REACTION_POOLING_INTERVAL_MS: Int = 10000
 let SESSION_REFRESH_OFFSET_MS: Int64 = 60000
 let REACTION_ID_TO_EMOJI_MAP: [Int: String] = [
     1: "✋",
-    2: "😕",
-    3: "💡"
+    2: "😭",
+    3: "😎"
 ]
 // TODO: notification manager currently does not work.
 let haptic_manager = HapticManager()
