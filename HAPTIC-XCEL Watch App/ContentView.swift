@@ -23,9 +23,9 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                Text("HAPTIC XCEL")
+                Text("Hapster")
                     .font(.headline)
-                Text("Real-time feedback for instructors")
+                Text("Live feedback for instructors")
                     .font(.subheadline)
                     .multilineTextAlignment(.center)
                     .padding()
@@ -95,7 +95,7 @@ struct SessionIdView: View {
                         Text("Session active at")
                             .font(.system(size: 14))
                             .padding()
-                        Text("haptic-excel.onrender.com")
+                        Text("hapster.onrender.com")
                             .multilineTextAlignment(.center)
                             .bold()
                             .font(.system(size: 12))
