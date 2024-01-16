@@ -1,2 +1,2 @@
-# HAPTIC-XCEL
-Haptic eXperiences for Continuous Engagement and Learning
+# Hapster
+A watchOS application that enables instructors to receive live visuohaptic feedback from their students.
